@@ -1048,7 +1048,6 @@ def load_data_from_data_files(deps: list, data_file_integrity: dict) -> list:
                 # delete from all_page_contents
                 all_page_contents.pop(path, None)
                 all_opened_pages.pop(path, None)
-                all_opened_pages.pop(path, None)
                 continue
 
     return changed_files
