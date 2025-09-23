@@ -594,8 +594,6 @@ def render_page(file: str, skip_hooks=False) -> None:
             permalink = file.replace("templates/", "")
     elif has_user_assigned_permalink:
         permalink = os.path.join(page_state["page"].permalink.strip("/"), "index.html")
-    else:
-        permalink = file.replace("templates/", "")
 
     permalink_without_index = permalink.split("index.html")[0]
     final_url = f"{BASE_URL}/{permalink_without_index.rstrip('/')}/"
