@@ -1015,7 +1015,7 @@ def load_data_from_data_files(deps: list, data_file_integrity: dict) -> list:
                 record["layout"] = data_dir
 
             slug = record.get("slug")
-            path = os.path.join(data_dir, "index.html")
+            path = os.path.join(data_dir, slug, "index.html")
 
             record_as_string = orjson.dumps(record).decode()
 
