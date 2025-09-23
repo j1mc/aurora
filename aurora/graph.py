@@ -1272,7 +1272,7 @@ def main(deps: list = [], watch: bool = False, incremental: bool = False) -> Non
     posts = [
         key
         for key in all_opened_pages.keys()
-        if key.startswith(os.path.join(ROOT_DIR, "/posts"))
+        if key.startswith(os.path.join(ROOT_DIR, "posts"))
     ]
 
     for post in posts:
