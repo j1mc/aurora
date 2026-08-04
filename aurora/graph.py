@@ -1393,7 +1393,7 @@ def main(deps: list = [], watch: bool = False, incremental: bool = False) -> Non
     if incremental and deps:
         for file in tqdm.tqdm(state_to_write):
             if original_file_to_permalink.get(file) in deps:
-                 is_safe_path(file)
+                is_safe_path(file)
                 with open(file, "wb", buffering=1000) as f:
                     f.write(state_to_write[file].encode())
     else:
