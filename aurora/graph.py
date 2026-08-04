@@ -25,7 +25,9 @@ from jinja2 import (
     Template,
     meta,
     nodes,
+    StrictUndefined
 )
+from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.visitor import NodeVisitor
 from toposort import toposort_flatten
 from yaml.reader import ReaderError
@@ -40,6 +42,20 @@ from .date_helpers import (
     year,
 )
 
+class FrontMatterEnvironment(ImmutableSandboxedEnvironment):
+    def is_safe_callable(self, obj):
+        # Do not allow function or method calls.
+        return False
+
+FRONT_MATTER_ENV = FrontMatterEnvironment(
+    undefined=StrictUndefined,
+    autoescape=False,
+)
+
+FRONT_MATTER_ENV.globals.clear()
+FRONT_MATTER_ENV.filters.clear()
+FRONT_MATTER_ENV.tests.clear()
+
 module_dir = os.getcwd()
 os.chdir(module_dir)
 sys.path.append(module_dir)
@@ -49,6 +65,22 @@ normalized_collection_permalinks = {}
 
 # print all logs
 logging.basicConfig(level=logging.INFO)
+
+def is_safe_path(permalink):
+    site_root = os.path.realpath(SITE_DIR)
+    relative_permalink = permalink.lstrip("/")
+    
+    output_path = os.path.realpath(
+        os.path.join(site_root, relative_permalink, "index.html")
+    )
+    
+    try:
+        contained = os.path.commonpath([site_root, output_path]) == site_root
+    except ValueError:
+        contained = False
+    
+    if not contained:
+        raise ValueError("Permalink resolves outside the site output directory")
 
 from config import (
     BASE_URL,
@@ -159,6 +191,7 @@ def read_file(file_name, mode="r") -> str:
     """
     Read a file and return its contents.
     """
+    is_safe_path(file_name)
     try:
         with open(file_name, mode) as file:
             return file.read()
@@ -379,7 +412,7 @@ def interpolate_front_matter(front_matter: dict, state: dict, runtime = None) ->
             and key not in interpolated_keys  # Only interpolate if key hasn't been processed
         ):
             try:
-                front_matter[key] = JINJA2_ENV.from_string(front_matter[key]).render(
+                front_matter[key] = FRONT_MATTER_ENV.from_string(front_matter[key]).render(
                     page=front_matter.get("page", front_matter), site=state
                 )
                 interpolated_keys.add(key)  # Mark this key as interpolated
@@ -578,6 +611,7 @@ def render_page(file: str, skip_hooks=False) -> None:
         path = os.path.join(SITE_DIR, "index.html")
         if os.path.exists(path):
             os.remove(path)
+        is_safe_path(path)
         with open(path, "w") as f:
             f.write(rendered)
 
@@ -688,7 +722,7 @@ def generate_date_page_given_year_month_date(
     rendered_page = recursively_build_page_template_with_front_matter(
         ymd_path, fm, date_archive_state, loads(rendered_page).content
     )
-
+    is_safe_path(ymd_path)
     with open(
         os.path.join(ymd_path, "index.html"),
         "wb",
@@ -773,7 +807,7 @@ def generate_paginated_page_for_collection(
             paginated_collection_state,
             loads(rendered_page).content,
         )
-
+        is_safe_path(paginated_collection_path)
         with open(
             paginated_collection_path,
             "wb",
@@ -925,9 +959,10 @@ def process_archives(name: str, state_key_associated_with_name: str, path: str):
             archive_state,
             loads(rendered_page).content,
         )
-
+        path_file = os.path.join(SITE_DIR, path, slugify(category), "index.html")
+        is_safe_path(path_file)
         with open(
-            os.path.join(SITE_DIR, path, slugify(category), "index.html"),
+            path_file,
             "wb",
             buffering=500,
         ) as f:
@@ -1349,17 +1384,21 @@ def main(deps: list = [], watch: bool = False, incremental: bool = False) -> Non
                 if not os.path.exists(path):
                     os.makedirs(path)
                 contents = read_file(os.path.join(root, file), "rb")
+                path_file = os.path.join(SITE_DIR, root, file)
+                is_safe_path(path_file)
 
-                with open(os.path.join(SITE_DIR, root, file), "wb") as f2:
+                with open(path_file, "wb") as f2:
                     f2.write(contents)
 
     if incremental and deps:
         for file in tqdm.tqdm(state_to_write):
             if original_file_to_permalink.get(file) in deps:
+                 is_safe_path(file)
                 with open(file, "wb", buffering=1000) as f:
                     f.write(state_to_write[file].encode())
     else:
         for file in tqdm.tqdm(state_to_write):
+            is_safe_path(file)
             with open(file, "wb", buffering=1000) as f:
                 f.write(state_to_write[file].encode())
 
