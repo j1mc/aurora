@@ -1,4 +1,9 @@
-![Banner](banner.png)
+> [!WARNING]
+> As of August 29th, 2026, Aurora is being archived, and will soon no longer be maintained. I do not recommend using Aurora any more as it is no longer actively managed.
+
+<details>
+    <summary>See original README</summary>
+    ![Banner](banner.png)
 
 <div align="center">
 
@@ -266,3 +271,5 @@ Have you made a website with Aurora? File a PR and add it to the list!
 ## License
 
 This project is licensed under an [MIT license](LICENSE).
+
+</details>
