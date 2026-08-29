@@ -3,7 +3,8 @@
 
 <details>
     <summary>See original README</summary>
-    ![Banner](banner.png)
+
+![Banner](banner.png)
 
 <div align="center">
 
